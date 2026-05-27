@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:taskflow/app.dart';
+import 'package:taskflow/data/task_store.dart';
 
 void main() {
-  runApp(const TaskFlowApp());
+  final taskStore = TaskStore();
+  runApp(TaskFlowApp(taskStore: taskStore));
 }

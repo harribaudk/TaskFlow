@@ -3,6 +3,7 @@ import 'package:taskflow/models/task.dart';
 import 'package:taskflow/routes/app_routes.dart';
 import 'package:taskflow/screens/task_form_screen.dart';
 import 'package:taskflow/theme/app_text_styles.dart';
+import 'package:taskflow/widgets/task_error_banner.dart';
 import 'package:taskflow/widgets/task_list_tile.dart';
 import 'package:taskflow/widgets/task_store_scope.dart';
 import 'package:taskflow/widgets/taskflow_scaffold.dart';
@@ -31,30 +32,52 @@ class TasksScreen extends StatelessWidget {
       listenable: store,
       builder: (context, _) {
         final tasks = store.tasks;
+        final isLoading = store.isLoading && tasks.isEmpty;
 
         return TaskFlowScaffold(
           title: 'Mes tâches',
           currentRoute: AppRoutes.tasks,
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _openForm(context),
-            tooltip: 'Nouvelle tâche',
-            child: const Icon(Icons.add),
-          ),
-          body: tasks.isEmpty
-              ? _EmptyTasks(onCreate: () => _openForm(context))
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: tasks.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return TaskListTile(
-                      task: task,
-                      onTap: () => _openForm(context, task: task),
-                    );
-                  },
+          floatingActionButton: store.isLoading
+              ? null
+              : FloatingActionButton(
+                  onPressed: () => _openForm(context),
+                  tooltip: 'Nouvelle tâche',
+                  child: const Icon(Icons.add),
                 ),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (store.error != null)
+                TaskErrorBanner(
+                  message: store.error!,
+                  onRetry: store.load,
+                  onDismiss: store.clearError,
+                ),
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : tasks.isEmpty
+                        ? _EmptyTasks(onCreate: () => _openForm(context))
+                        : RefreshIndicator(
+                            onRefresh: store.load,
+                            child: ListView.separated(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              itemCount: tasks.length,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(height: 8),
+                              itemBuilder: (context, index) {
+                                final task = tasks[index];
+                                return TaskListTile(
+                                  task: task,
+                                  onTap: () => _openForm(context, task: task),
+                                );
+                              },
+                            ),
+                          ),
+              ),
+            ],
+          ),
         );
       },
     );

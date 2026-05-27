@@ -10,15 +10,26 @@ import 'package:taskflow/screens/tasks_screen.dart';
 import 'package:taskflow/theme/app_theme.dart';
 import 'package:taskflow/widgets/task_store_scope.dart';
 
-class TaskFlowApp extends StatelessWidget {
+class TaskFlowApp extends StatefulWidget {
   const TaskFlowApp({super.key, required this.taskStore});
 
   final TaskStore taskStore;
 
   @override
+  State<TaskFlowApp> createState() => _TaskFlowAppState();
+}
+
+class _TaskFlowAppState extends State<TaskFlowApp> {
+  @override
+  void initState() {
+    super.initState();
+    widget.taskStore.load();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TaskStoreScope(
-      store: taskStore,
+      store: widget.taskStore,
       child: MaterialApp(
         title: 'TaskFlow',
         debugShowCheckedModeBanner: false,

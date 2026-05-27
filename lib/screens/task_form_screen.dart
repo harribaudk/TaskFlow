@@ -35,6 +35,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   late TaskPriority _priority;
   DateTime? _deadline;
   bool _deadlineHasTime = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -102,41 +103,50 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     });
   }
 
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate() || _isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
 
     final title = _titleController.text.trim();
     final description = _descriptionController.text.trim();
+    final store = widget.taskStore;
 
-    if (widget.isEditing) {
-      widget.taskStore.update(
-        widget.task!.copyWith(
-          title: title,
-          description: description.isEmpty ? null : description,
-          clearDescription: description.isEmpty,
-          category: _category,
-          priority: _priority,
-          deadline: _deadline,
-          clearDeadline: _deadline == null,
-        ),
-      );
-    } else {
-      widget.taskStore.add(
-        Task(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
-          title: title,
-          description: description.isEmpty ? null : description,
-          category: _category,
-          priority: _priority,
-          deadline: _deadline,
-        ),
+    final success = widget.isEditing
+        ? await store.update(
+              widget.task!.copyWith(
+                title: title,
+                description: description.isEmpty ? null : description,
+                clearDescription: description.isEmpty,
+                category: _category,
+                priority: _priority,
+                deadline: _deadline,
+                clearDeadline: _deadline == null,
+              ),
+            ) !=
+            null
+        : await store.create(
+              title: title,
+              description: description.isEmpty ? null : description,
+              category: _category,
+              priority: _priority,
+              deadline: _deadline,
+            ) !=
+            null;
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    if (success) {
+      Navigator.pop(context, true);
+    } else if (store.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(store.error!)),
       );
     }
-
-    Navigator.pop(context, true);
   }
 
-  void _delete() async {
+  Future<void> _delete() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -157,8 +167,19 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     );
 
     if (confirmed != true || !mounted) return;
-    widget.taskStore.remove(widget.task!.id);
-    Navigator.pop(context, true);
+
+    setState(() => _isSubmitting = true);
+    final success = await widget.taskStore.remove(widget.task!.id);
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    if (success) {
+      Navigator.pop(context, true);
+    } else if (widget.taskStore.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.taskStore.error!)),
+      );
+    }
   }
 
   @override
@@ -273,6 +294,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       key: const Key('task_form_save'),
                       label: widget.isEditing ? 'Enregistrer' : 'Créer la tâche',
                       icon: Icons.check,
+                      enabled: !_isSubmitting,
                       onPressed: _save,
                     ),
                     if (widget.isEditing) ...[
@@ -280,6 +302,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       TaskFlowButton(
                         label: 'Annuler',
                         variant: TaskFlowButtonVariant.outlined,
+                        enabled: !_isSubmitting,
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],

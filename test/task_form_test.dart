@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:taskflow/data/in_memory_task_repository.dart';
 import 'package:taskflow/data/task_store.dart';
 import 'package:taskflow/screens/task_form_screen.dart';
 
@@ -7,7 +8,7 @@ void main() {
   late TaskStore taskStore;
 
   setUp(() {
-    taskStore = TaskStore();
+    taskStore = TaskStore(InMemoryTaskRepository());
   });
 
   testWidgets('Le formulaire exige un titre', (WidgetTester tester) async {

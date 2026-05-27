@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:taskflow/config/app_config.dart';
 import 'package:taskflow/routes/app_routes.dart';
 import 'package:taskflow/theme/app_colors.dart';
 import 'package:taskflow/theme/app_text_styles.dart';
@@ -31,6 +32,33 @@ class SettingsScreen extends StatelessWidget {
           const TaskFlowTextField(
             label: 'Recherche',
             hint: 'Rechercher une tâche…',
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('API REST', style: AppTextStyles.titleMedium),
+                const SizedBox(height: 8),
+                Text(
+                  AppConfig.apiBaseUrl,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Démarrez l\'API : dart run tool/mock_task_api_server.dart',
+                  style: AppTextStyles.bodyMedium,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           Container(

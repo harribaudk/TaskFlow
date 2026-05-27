@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:taskflow/app.dart';
+import 'package:taskflow/data/in_memory_task_repository.dart';
 import 'package:taskflow/data/task_store.dart';
 
 void main() {
   late TaskStore taskStore;
 
   setUp(() {
-    taskStore = TaskStore();
+    taskStore = TaskStore(InMemoryTaskRepository());
   });
 
   Widget buildApp() => TaskFlowApp(taskStore: taskStore);
@@ -32,5 +33,4 @@ void main() {
 
     expect(find.text('Aucune tâche pour le moment'), findsOneWidget);
   });
-
 }

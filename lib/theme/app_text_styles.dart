@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:taskflow/theme/app_colors.dart';
 
-/// Typographie TaskFlow — polices et tailles cohérentes.
 abstract final class AppTextStyles {
   static TextStyle get _base => GoogleFonts.inter(color: AppColors.textPrimary);
 

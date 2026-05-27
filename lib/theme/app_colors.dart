@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Charte graphique TaskFlow — couleurs fixes de l'application.
 abstract final class AppColors {
   static const Color primary = Color(0xFF2563EB);
   static const Color primaryDark = Color(0xFF1D4ED8);

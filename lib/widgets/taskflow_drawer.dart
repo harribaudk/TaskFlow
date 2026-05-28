@@ -41,13 +41,6 @@ class TaskFlowDrawer extends StatelessWidget {
                     route: AppRoutes.focus,
                     currentRoute: currentRoute,
                   ),
-                  _DrawerTile(
-                    icon: Icons.folder_outlined,
-                    selectedIcon: Icons.folder,
-                    label: 'Catégories',
-                    route: AppRoutes.categories,
-                    currentRoute: currentRoute,
-                  ),
                   const Divider(height: 24, indent: 16, endIndent: 16),
                   _DrawerTile(
                     icon: Icons.settings_outlined,

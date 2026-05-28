@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:taskflow/data/task_store.dart';
 import 'package:taskflow/routes/app_routes.dart';
-import 'package:taskflow/screens/categories_screen.dart';
 import 'package:taskflow/screens/focus_screen.dart';
 import 'package:taskflow/screens/home_screen.dart';
 import 'package:taskflow/screens/settings_screen.dart';
@@ -46,7 +45,6 @@ class _TaskFlowAppState extends State<TaskFlowApp> {
           AppRoutes.home: (_) => const HomeScreen(),
           AppRoutes.tasks: (_) => const TasksScreen(),
           AppRoutes.focus: (_) => const FocusScreen(),
-          AppRoutes.categories: (_) => const CategoriesScreen(),
           AppRoutes.settings: (_) => const SettingsScreen(),
         },
       ),

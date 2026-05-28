@@ -11,24 +11,19 @@ abstract final class TaskJsonMapper {
       category: _parseCategory(json['category'] as String),
       priority: _parsePriority(json['priority'] as String),
       deadline: _parseDeadline(json['deadline']),
+      photoPath: json['photoPath'] as String?,
       completed: json['completed'] as bool? ?? false,
     );
   }
 
   static List<Task> listFromJson(dynamic data) {
     if (data is List) {
-      return data
-          .whereType<Map<String, dynamic>>()
-          .map(fromJson)
-          .toList();
+      return data.whereType<Map<String, dynamic>>().map(fromJson).toList();
     }
     if (data is Map<String, dynamic>) {
       final items = data['items'] ?? data['data'] ?? data['tasks'];
       if (items is List) {
-        return items
-            .whereType<Map<String, dynamic>>()
-            .map(fromJson)
-            .toList();
+        return items.whereType<Map<String, dynamic>>().map(fromJson).toList();
       }
     }
     throw const FormatException('Format de liste de tâches non reconnu');
@@ -40,14 +35,15 @@ abstract final class TaskJsonMapper {
     required TaskCategory category,
     required TaskPriority priority,
     DateTime? deadline,
+    String? photoPath,
   }) {
     return {
       'title': title,
-      if (description != null && description.isNotEmpty)
-        'description': description,
+      if (description != null && description.isNotEmpty) 'description': description,
       'category': category.name,
       'priority': priority.name,
       if (deadline != null) 'deadline': deadline.toUtc().toIso8601String(),
+      if (photoPath != null && photoPath.isNotEmpty) 'photoPath': photoPath,
       'completed': false,
     };
   }
@@ -59,6 +55,7 @@ abstract final class TaskJsonMapper {
       'category': task.category.name,
       'priority': task.priority.name,
       'deadline': task.deadline?.toUtc().toIso8601String(),
+      'photoPath': task.photoPath,
       'completed': task.completed,
     };
   }

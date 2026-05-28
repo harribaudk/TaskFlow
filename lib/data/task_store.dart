@@ -53,6 +53,7 @@ class TaskStore extends ChangeNotifier {
     required TaskCategory category,
     required TaskPriority priority,
     DateTime? deadline,
+    String? photoPath,
   }) async {
     return _runSaving(() async {
       final task = await _repository.create(
@@ -61,6 +62,7 @@ class TaskStore extends ChangeNotifier {
         category: category,
         priority: priority,
         deadline: deadline,
+        photoPath: photoPath,
       );
       _tasks.add(task);
       return task;

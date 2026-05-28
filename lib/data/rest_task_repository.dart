@@ -20,6 +20,7 @@ class RestTaskRepository implements TaskRepository {
     required TaskCategory category,
     required TaskPriority priority,
     DateTime? deadline,
+    String? photoPath,
   }) =>
       _api.create(
         title: title,
@@ -27,6 +28,7 @@ class RestTaskRepository implements TaskRepository {
         category: category,
         priority: priority,
         deadline: deadline,
+        photoPath: photoPath,
       );
 
   @override

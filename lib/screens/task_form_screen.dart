@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:taskflow/data/task_store.dart';
 import 'package:taskflow/models/task.dart';
 import 'package:taskflow/models/task_category.dart';
@@ -28,12 +32,15 @@ class TaskFormScreen extends StatefulWidget {
 
 class _TaskFormScreenState extends State<TaskFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _imagePicker = ImagePicker();
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
 
   late TaskCategory _category;
   late TaskPriority _priority;
   DateTime? _deadline;
+  String? _photoPath;
+  bool _removePhoto = false;
   bool _deadlineHasTime = false;
   bool _isSubmitting = false;
 
@@ -46,9 +53,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     _category = task?.category ?? TaskCategory.travail;
     _priority = task?.priority ?? TaskPriority.medium;
     _deadline = task?.deadline;
+    _photoPath = task?.photoPath;
     if (_deadline != null) {
-      _deadlineHasTime =
-          _deadline!.hour != 0 || _deadline!.minute != 0;
+      _deadlineHasTime = _deadline!.hour != 0 || _deadline!.minute != 0;
     }
   }
 
@@ -74,7 +81,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     );
     if (date == null || !mounted) return;
 
-    DateTime result = DateTime(date.year, date.month, date.day);
+    var result = DateTime(date.year, date.month, date.day);
     if (_deadlineHasTime) {
       final time = await showTimePicker(
         context: context,
@@ -84,13 +91,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         confirmText: 'Valider',
       );
       if (time == null || !mounted) return;
-      result = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
+      result = DateTime(date.year, date.month, date.day, time.hour, time.minute);
     }
 
     setState(() => _deadline = result);
@@ -100,6 +101,51 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     setState(() {
       _deadline = null;
       _deadlineHasTime = false;
+    });
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    if (_isSubmitting) return;
+    final granted = await _requestPermissionFor(source);
+    if (!granted || !mounted) return;
+
+    final file = await _imagePicker.pickImage(
+      source: source,
+      imageQuality: 75,
+      maxWidth: 1400,
+    );
+
+    if (file == null || !mounted) return;
+
+    setState(() {
+      _photoPath = file.path;
+      _removePhoto = false;
+    });
+  }
+
+  Future<bool> _requestPermissionFor(ImageSource source) async {
+    final permission = source == ImageSource.camera
+        ? Permission.camera
+        : Permission.photos;
+
+    var status = await permission.status;
+    if (!status.isGranted && !status.isLimited) {
+      status = await permission.request();
+    }
+
+    if (status.isGranted || status.isLimited) return true;
+
+    if (!mounted) return false;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Permission refusée pour accéder aux photos/caméra.')),
+    );
+    return false;
+  }
+
+  void _removeSelectedPhoto() {
+    setState(() {
+      _photoPath = null;
+      _removePhoto = true;
     });
   }
 
@@ -122,6 +168,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 priority: _priority,
                 deadline: _deadline,
                 clearDeadline: _deadline == null,
+                photoPath: _photoPath,
+                clearPhotoPath: _removePhoto,
               ),
             ) !=
             null
@@ -131,6 +179,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
               category: _category,
               priority: _priority,
               deadline: _deadline,
+              photoPath: _photoPath,
             ) !=
             null;
 
@@ -140,9 +189,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     if (success) {
       Navigator.pop(context, true);
     } else if (store.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(store.error!)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(store.error!)));
     }
   }
 
@@ -205,81 +252,89 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                 children: [
-            const _SectionLabel('Informations'),
-            const SizedBox(height: 12),
-            TaskFlowTextField(
-              label: 'Titre',
-              hint: 'Ex. Préparer la réunion',
-              controller: _titleController,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Le titre est obligatoire';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TaskFlowTextField(
-              label: 'Description',
-              hint: 'Détails optionnels…',
-              controller: _descriptionController,
-              maxLines: 4,
-            ),
-            const SizedBox(height: 28),
-            const _SectionLabel('Catégorie'),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: TaskCategory.values.map((category) {
-                return SelectionChip(
-                  label: category.label,
-                  selected: _category == category,
-                  selectedColor: category.color,
-                  leading: Icon(
-                    category.icon,
-                    size: 18,
-                    color: _category == category
-                        ? category.color
-                        : AppColors.textSecondary,
+                  const _SectionLabel('Informations'),
+                  const SizedBox(height: 12),
+                  TaskFlowTextField(
+                    label: 'Titre',
+                    hint: 'Ex. Préparer la réunion',
+                    controller: _titleController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Le titre est obligatoire';
+                      }
+                      return null;
+                    },
                   ),
-                  onSelected: () => setState(() => _category = category),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 28),
-            const _SectionLabel('Priorité'),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: TaskPriority.values.map((priority) {
-                return SelectionChip(
-                  label: priority.label,
-                  selected: _priority == priority,
-                  selectedColor: priority.color,
-                  onSelected: () => setState(() => _priority = priority),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 28),
-            const _SectionLabel('Échéance'),
-            const SizedBox(height: 12),
-            _DeadlinePicker(
-              deadline: _deadline,
-              hasTime: _deadlineHasTime,
-              onPick: _pickDeadline,
-              onClear: _clearDeadline,
-              onToggleTime: (value) {
-                setState(() {
-                  _deadlineHasTime = value;
-                  if (_deadline != null && !value) {
-                    final d = _deadline!;
-                    _deadline = DateTime(d.year, d.month, d.day);
-                  }
-                });
-              },
-            ),
+                  const SizedBox(height: 16),
+                  TaskFlowTextField(
+                    label: 'Description',
+                    hint: 'Détails optionnels…',
+                    controller: _descriptionController,
+                    maxLines: 4,
+                  ),
+                  const SizedBox(height: 20),
+                  const _SectionLabel('Photo'),
+                  const SizedBox(height: 12),
+                  _PhotoPicker(
+                    photoPath: _photoPath,
+                    onTakePhoto: () => _pickPhoto(ImageSource.camera),
+                    onPickGallery: () => _pickPhoto(ImageSource.gallery),
+                    onRemove: _removeSelectedPhoto,
+                    enabled: !_isSubmitting,
+                  ),
+                  const SizedBox(height: 28),
+                  const _SectionLabel('Catégorie'),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: TaskCategory.values.map((category) {
+                      return SelectionChip(
+                        label: category.label,
+                        selected: _category == category,
+                        selectedColor: category.color,
+                        leading: Icon(
+                          category.icon,
+                          size: 18,
+                          color: _category == category ? category.color : AppColors.textSecondary,
+                        ),
+                        onSelected: () => setState(() => _category = category),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 28),
+                  const _SectionLabel('Priorité'),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: TaskPriority.values.map((priority) {
+                      return SelectionChip(
+                        label: priority.label,
+                        selected: _priority == priority,
+                        selectedColor: priority.color,
+                        onSelected: () => setState(() => _priority = priority),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 28),
+                  const _SectionLabel('Échéance'),
+                  const SizedBox(height: 12),
+                  _DeadlinePicker(
+                    deadline: _deadline,
+                    hasTime: _deadlineHasTime,
+                    onPick: _pickDeadline,
+                    onClear: _clearDeadline,
+                    onToggleTime: (value) {
+                      setState(() {
+                        _deadlineHasTime = value;
+                        if (_deadline != null && !value) {
+                          final d = _deadline!;
+                          _deadline = DateTime(d.year, d.month, d.day);
+                        }
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
@@ -328,6 +383,74 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
+class _PhotoPicker extends StatelessWidget {
+  const _PhotoPicker({
+    required this.photoPath,
+    required this.onTakePhoto,
+    required this.onPickGallery,
+    required this.onRemove,
+    required this.enabled,
+  });
+
+  final String? photoPath;
+  final VoidCallback onTakePhoto;
+  final VoidCallback onPickGallery;
+  final VoidCallback onRemove;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhoto = photoPath != null && photoPath!.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: enabled ? onTakePhoto : null,
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: const Text('Prendre une photo'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: enabled ? onPickGallery : null,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Text('Depuis galerie'),
+              ),
+            ),
+          ],
+        ),
+        if (hasPhoto) ...[
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.file(
+                File(photoPath!),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: enabled ? onRemove : null,
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Retirer la photo'),
+              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _DeadlinePicker extends StatelessWidget {
   const _DeadlinePicker({
     required this.deadline,
@@ -362,10 +485,7 @@ class _DeadlinePicker extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.event_outlined,
-                    color: AppColors.primary,
-                  ),
+                  const Icon(Icons.event_outlined, color: AppColors.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -373,9 +493,7 @@ class _DeadlinePicker extends StatelessWidget {
                           ? formatTaskDeadline(deadline!, includesTime: hasTime)
                           : 'Ajouter une date limite',
                       style: AppTextStyles.bodyLarge.copyWith(
-                        color: deadline != null
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
+                        color: deadline != null ? AppColors.textPrimary : AppColors.textSecondary,
                       ),
                     ),
                   ),

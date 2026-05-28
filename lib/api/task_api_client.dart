@@ -39,6 +39,7 @@ class TaskApiClient {
     required TaskCategory category,
     required TaskPriority priority,
     DateTime? deadline,
+    String? photoPath,
   }) async {
     final body = TaskJsonMapper.toCreateJson(
       title: title,
@@ -46,6 +47,7 @@ class TaskApiClient {
       category: category,
       priority: priority,
       deadline: deadline,
+      photoPath: photoPath,
     );
     final response = await _client
         .post(

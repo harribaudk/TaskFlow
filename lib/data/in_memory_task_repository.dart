@@ -17,6 +17,7 @@ class InMemoryTaskRepository implements TaskRepository {
     required TaskCategory category,
     required TaskPriority priority,
     DateTime? deadline,
+    String? photoPath,
   }) async {
     final task = Task(
       id: (_idCounter++).toString(),
@@ -25,6 +26,7 @@ class InMemoryTaskRepository implements TaskRepository {
       category: category,
       priority: priority,
       deadline: deadline,
+      photoPath: photoPath,
     );
     _tasks.add(task);
     return task;

@@ -11,6 +11,7 @@ abstract class TaskRepository {
     required TaskCategory category,
     required TaskPriority priority,
     DateTime? deadline,
+    String? photoPath,
   });
 
   Future<Task> update(Task task);

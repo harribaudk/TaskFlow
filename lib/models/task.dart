@@ -9,6 +9,7 @@ class Task {
     required this.category,
     required this.priority,
     this.deadline,
+    this.photoPath,
     this.completed = false,
   });
 
@@ -18,6 +19,7 @@ class Task {
   final TaskCategory category;
   final TaskPriority priority;
   final DateTime? deadline;
+  final String? photoPath;
   final bool completed;
 
   Task copyWith({
@@ -29,6 +31,8 @@ class Task {
     TaskPriority? priority,
     DateTime? deadline,
     bool clearDeadline = false,
+    String? photoPath,
+    bool clearPhotoPath = false,
     bool? completed,
   }) {
     return Task(
@@ -38,6 +42,7 @@ class Task {
       category: category ?? this.category,
       priority: priority ?? this.priority,
       deadline: clearDeadline ? null : (deadline ?? this.deadline),
+      photoPath: clearPhotoPath ? null : (photoPath ?? this.photoPath),
       completed: completed ?? this.completed,
     );
   }

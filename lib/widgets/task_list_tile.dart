@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:taskflow/models/task.dart';
 import 'package:taskflow/models/task_priority.dart';
@@ -18,8 +20,7 @@ class TaskListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final deadline = task.deadline;
-    final hasTime = deadline != null &&
-        (deadline.hour != 0 || deadline.minute != 0);
+    final hasTime = deadline != null && (deadline.hour != 0 || deadline.minute != 0);
 
     return Card(
       elevation: 0,
@@ -30,10 +31,7 @@ class TaskListTile extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: task.category.color.withValues(alpha: 0.12),
-          child: Icon(task.category.icon, color: task.category.color, size: 22),
-        ),
+        leading: _TaskLeading(task: task),
         title: Text(
           task.title,
           style: AppTextStyles.titleMedium.copyWith(
@@ -59,7 +57,7 @@ class TaskListTile extends StatelessWidget {
                 _PriorityBadge(priority: task.priority),
                 if (deadline != null) ...[
                   const SizedBox(width: 8),
-                  Icon(
+                  const Icon(
                     Icons.schedule,
                     size: 14,
                     color: AppColors.textSecondary,
@@ -79,6 +77,30 @@ class TaskListTile extends StatelessWidget {
         ),
         trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       ),
+    );
+  }
+}
+
+class _TaskLeading extends StatelessWidget {
+  const _TaskLeading({required this.task});
+
+  final Task task;
+
+  @override
+  Widget build(BuildContext context) {
+    final photoPath = task.photoPath;
+    if (photoPath != null && photoPath.isNotEmpty) {
+      final file = File(photoPath);
+      if (file.existsSync()) {
+        return CircleAvatar(
+          backgroundImage: FileImage(file),
+        );
+      }
+    }
+
+    return CircleAvatar(
+      backgroundColor: task.category.color.withValues(alpha: 0.12),
+      child: Icon(task.category.icon, color: task.category.color, size: 22),
     );
   }
 }

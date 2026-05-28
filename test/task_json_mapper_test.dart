@@ -12,6 +12,7 @@ void main() {
       'category': 'travail',
       'priority': 'high',
       'deadline': '2026-05-27T10:00:00.000Z',
+      'photoPath': '/tmp/photo.jpg',
       'completed': false,
     });
 
@@ -20,6 +21,7 @@ void main() {
     expect(task.category, TaskCategory.travail);
     expect(task.priority, TaskPriority.high);
     expect(task.deadline, isNotNull);
+    expect(task.photoPath, '/tmp/photo.jpg');
   });
 
   test('listFromJson accepte un tableau ou un objet items', () {

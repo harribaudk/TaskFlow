@@ -3,6 +3,7 @@ import 'package:taskflow/config/app_config.dart';
 import 'package:taskflow/routes/app_routes.dart';
 import 'package:taskflow/theme/app_colors.dart';
 import 'package:taskflow/theme/app_text_styles.dart';
+import 'package:taskflow/widgets/auth_scope.dart';
 import 'package:taskflow/widgets/task_store_scope.dart';
 import 'package:taskflow/widgets/taskflow_scaffold.dart';
 
@@ -12,9 +13,10 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = TaskStoreScope.of(context);
+    final auth = AuthScope.of(context);
 
     return ListenableBuilder(
-      listenable: store,
+      listenable: Listenable.merge([store, auth]),
       builder: (context, _) {
         final totalTasks = store.tasks.length;
         final focusTasks = store.focusTasks.length;
@@ -25,6 +27,34 @@ class SettingsScreen extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              _SettingsCard(
+                title: 'Compte',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      auth.currentEmail ?? 'Non connecté',
+                      style: AppTextStyles.titleMedium,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Authentification locale (données stockées sur l\'appareil).',
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: auth.logout,
+                      icon: const Icon(Icons.logout),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                        side: const BorderSide(color: AppColors.error),
+                      ),
+                      label: const Text('Se déconnecter'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
               _SettingsCard(
                 title: 'Raccourcis',
                 child: Text(

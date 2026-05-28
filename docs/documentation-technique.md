@@ -21,6 +21,7 @@ Dependances principales:
 - `google_fonts` (typographie Inter)
 - `image_picker` (ajout photo)
 - `permission_handler` (gestion permissions camera/galerie)
+- `shared_preferences` (stockage local des identifiants et de la session)
 
 Tests:
 
@@ -29,11 +30,12 @@ Tests:
 
 ## 3. Structure du projet
 
-- `lib/main.dart` : point d'entree, initialisation du `TaskStore`.
-- `lib/app.dart` : configuration globale `MaterialApp`, routes, theme, locale.
-- `lib/routes/` : constantes de navigation.
-- `lib/screens/` : ecrans applicatifs (Accueil, Taches, Focus, Parametres, Formulaire).
-- `lib/widgets/` : composants reutilisables (scaffold, drawer, boutons, champs, tiles...).
+- `lib/main.dart` : point d'entree, initialisation du `TaskStore` et `AuthController`.
+- `lib/app.dart` : configuration globale `MaterialApp`, garde d'authentification, routes, theme, locale.
+- `lib/auth/` : service d'authentification locale + controller d'etat.
+- `lib/routes/` : constantes de navigation (login, register, ecrans principaux).
+- `lib/screens/` : ecrans applicatifs (Login, Register, Accueil, Taches, Focus, Parametres, Formulaire).
+- `lib/widgets/` : composants reutilisables (scaffold, drawer, boutons, champs, tiles, `AuthScope`...).
 - `lib/models/` : entites metier (`Task`, `TaskCategory`, `TaskPriority`).
 - `lib/data/` : repository + store metier.
 - `lib/api/` : client HTTP, mapping JSON, exceptions.
@@ -49,7 +51,19 @@ Tests:
 - Navigation nommee via routes.
 - `TaskFlowScaffold` et `TaskFlowDrawer` pour un cadre commun.
 
-### 4.2 Couche logique/metier
+### 4.2 Couche authentification
+
+- `LocalAuthService` :
+  - initialise un compte demo si aucun compte n'existe,
+  - stocke email + hash mot de passe dans `SharedPreferences`,
+  - gere login / register / logout,
+  - restaure la session (`session_email`) au demarrage.
+- `AuthController` (`ChangeNotifier`) :
+  - expose `isInitializing`, `isAuthenticated`, `currentEmail`, `error`,
+  - notifie l'UI lors des changements d'etat.
+- `AuthScope` : injection du controller dans l'arbre de widgets.
+
+### 4.3 Couche logique/metier
 
 - `TaskStore` pilote:
   - chargement initial,
@@ -58,7 +72,7 @@ Tests:
   - calcul des `focusTasks`.
 - Le store notifie les ecrans (`ListenableBuilder`) pour rafraichir l'UI.
 
-### 4.3 Couche donnees
+### 4.4 Couche donnees
 
 - Contrat `TaskRepository`.
 - Implementation `RestTaskRepository`.
@@ -85,7 +99,39 @@ Attributs:
 - `TaskCategory`: Travail, Maison, Etudes, Personnel.
 - `TaskPriority`: Basse, Moyenne, Haute.
 
-## 6. API REST
+## 6. Authentification locale (implementation)
+
+### 6.1 Fichiers concernes
+
+| Fichier | Role |
+|---------|------|
+| `lib/auth/local_auth_service.dart` | Persistance et verification des identifiants |
+| `lib/auth/auth_controller.dart` | Etat auth pour l'interface |
+| `lib/widgets/auth_scope.dart` | Acces au controller depuis les ecrans |
+| `lib/screens/login_screen.dart` | UI de connexion |
+| `lib/screens/register_screen.dart` | UI d'inscription locale |
+
+### 6.2 Cles `SharedPreferences`
+
+- `auth_email` : email du compte local
+- `auth_password_hash` : hash du mot de passe (encodage base64 URL)
+- `session_email` : session active (utilisateur connecte)
+
+### 6.3 Garde d'acces applicative
+
+Dans `lib/app.dart` :
+
+- si `isInitializing` : ecran de chargement,
+- si non authentifie : routes login/register uniquement,
+- si authentifie : routes metier (Accueil, Taches, Focus, Parametres),
+- rechargement des taches declenche apres connexion valide.
+
+### 6.4 Routes auth
+
+- `/login` : ecran de connexion
+- `/register` : ecran d'inscription locale
+
+## 7. API REST
 
 Base URL:
 
@@ -106,7 +152,7 @@ Comportements:
 - Headers JSON (`Content-Type`, `Accept`).
 - Gestion d'erreurs via `ApiException`.
 
-## 7. Demarrage local
+## 8. Demarrage local
 
 1. Installer les dependances:
    - `flutter pub get`
@@ -115,7 +161,7 @@ Comportements:
 3. Lancer l'application:
    - `flutter run`
 
-## 8. Gestion des permissions mobiles
+## 9. Gestion des permissions mobiles
 
 Dans le formulaire de tache:
 
@@ -123,9 +169,21 @@ Dans le formulaire de tache:
 - demande permission photos pour import galerie,
 - message utilisateur si permission refusee.
 
-## 9. Roadmap technique
+## 10. Tests
 
-- Ajouter une couche d'authentification/token.
+Tests existants lies a l'authentification :
+
+- `test/local_auth_service_test.dart` : login, register, logout, persistance session
+- `test/widget_test.dart` : acces app apres connexion + affichage login si deconnecte
+
+Commandes :
+
+- `flutter test`
+- `flutter analyze`
+
+## 11. Roadmap technique
+
+- Remplacer l'auth locale par une auth distante (token JWT/OAuth).
 - Introduire la completion de tache dans le flux UI.
 - Ajouter stockage offline (cache local).
 - Mettre en place CI (tests/analyze auto).

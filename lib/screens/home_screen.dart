@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Bonjour 👋', style: AppTextStyles.displayLarge),
+            Text('Bonjour !', style: AppTextStyles.displayLarge),
             const SizedBox(height: 8),
             Text(
               'TaskFlow vous aide à organiser vos journées de façon simple et agréable.',

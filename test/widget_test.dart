@@ -18,7 +18,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Accueil'), findsOneWidget);
-    expect(find.text('Bonjour 👋'), findsOneWidget);
+    expect(find.text('Bonjour !'), findsOneWidget);
   });
 
   testWidgets('Le drawer permet de naviguer vers Mes tâches', (WidgetTester tester) async {

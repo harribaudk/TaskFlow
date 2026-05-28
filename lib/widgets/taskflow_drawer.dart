@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:taskflow/routes/app_routes.dart';
 import 'package:taskflow/theme/app_colors.dart';
 import 'package:taskflow/theme/app_text_styles.dart';
+import 'package:taskflow/widgets/auth_scope.dart';
 
 class TaskFlowDrawer extends StatelessWidget {
   const TaskFlowDrawer({super.key, required this.currentRoute});
@@ -52,6 +53,19 @@ class TaskFlowDrawer extends StatelessWidget {
                 ],
               ),
             ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.logout, color: AppColors.error),
+              title: Text(
+                'Déconnexion',
+                style: AppTextStyles.titleMedium.copyWith(color: AppColors.error),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                await AuthScope.of(context).logout();
+              },
+            ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -62,6 +76,8 @@ class TaskFlowDrawer extends StatelessWidget {
 class _DrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final email = AuthScope.of(context).currentEmail;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
       decoration: const BoxDecoration(
@@ -90,6 +106,17 @@ class _DrawerHeader extends StatelessWidget {
             'Organisez votre journée',
             style: AppTextStyles.bodyMedium,
           ),
+          if (email != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              email,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );

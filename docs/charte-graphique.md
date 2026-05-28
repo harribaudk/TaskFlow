@@ -93,9 +93,35 @@ Police de reference:
   - fond de selection leger.
 - Header drawer avec branding TaskFlow.
 
-## 8. Etats UI
+## 8. Ecrans d'authentification
+
+Les ecrans **Connexion** et **Inscription** reprennent la meme charte que le reste de l'application :
+
+- logo/icône TaskFlow dans un conteneur arrondi couleur primaire,
+- titres en `displayLarge`, textes secondaires en `bodyMedium`,
+- champs via `TaskFlowTextField`,
+- actions principales via `TaskFlowButton` (plein) et `OutlinedButton` (secondaire),
+- encadre informatif pour le compte demo (fond `background`, bordure `border`).
+
+## 9. Etats UI
 
 - **Chargement**: indicateur circulaire.
 - **Vide**: illustration iconique + message pedagogique + CTA.
 - **Erreur**: message contextualise en couleur erreur + action de reprise.
 - **Selection**: chips/categories/priorites avec couleur active.
+
+## 10. Accessibilite et lisibilite
+
+- Contraste suffisant texte/fond.
+- Zones tactiles confortables (>= 48 px pour actions principales).
+- Langage simple en francais.
+- Symboles appuyes par des labels textuels.
+
+## 11. Regles de coherence a respecter
+
+- Ne pas introduire de nouvelles couleurs hors palette sans validation.
+- Conserver Inter comme police unique principale.
+- Respecter les rayons de 12 px sur champs/boutons/cartes.
+- Uniformiser les tailles de texte selon la nomenclature des styles.
+- Toujours aligner les etats visuels (normal/actif/erreur/disabled) sur le theme central.
+- Appliquer les memes composants (`TaskFlowTextField`, `TaskFlowButton`) sur les ecrans d'authentification.
